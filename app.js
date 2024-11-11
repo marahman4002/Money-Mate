@@ -263,7 +263,7 @@ app.get("/generate-pdf", authMiddleware, async (req, res) => {
             .text(`Proof: `, { continued: true })
             .underline(doc.x, doc.y, 50, 0) // Creates the underline (useful for clickable text)
             .text("Click here", {
-              link: `http://localhost:3000/proof/${transaction._id.toString()}`,
+              link: `https://money-mate-jw4i.onrender.com/proof/${transaction._id.toString()}`,
             });
         }
       });
