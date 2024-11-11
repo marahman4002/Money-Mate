@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - Expenso</title>
+    <link rel="icon" href="/favicon.jpg">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Include Navbar -->
+    <%- include('partials/navbar') %>
+
+
+        <div class="signin-container">
+            <div class="signin-box">
+                <h2>Welcome Back</h2>
+
+                <!-- Sign In Form -->
+                <form id="signin-form" action="/signin" method="POST">
+                    <div class="input-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn">Sign In</button>
+                </form>
+
+                <div class="signup-text">
+                    <p>Don't have an account? <a href="/signup">Sign Up</a></p>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const form = document.getElementById('signin-form');
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                const formData = new FormData(form);
+                const data = new URLSearchParams(formData);
+
+                // Debugging: Log the form data
+                console.log('Form data being sent:', data.toString());
+
+                try {
+                    // const response = await fetch('/signin', {
+                    const response = await fetch('/signin', {
+                        method: 'POST',
+                        body: data // Send form data
+                    });
+
+                    const result = await response.json();
+                    console.log(result);  // Log the response from the server
+
+                    if (response.ok) {
+                        window.location.href = '/'; // Redirect if successful
+                    } else {
+                        showError(result.message); // Show error if not successful
+                    }
+                } catch (error) {
+                    if (!result.message){
+                        showError('An error occurred. Please try again later.');
+                        console.log("a")
+                    }
+                }
+            });
+
+        </script>
+
+</body>
+
+</html>

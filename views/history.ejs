@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expenditure Management</title>
+    <link rel="icon" href="/favicon.jpg">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Include Navbar -->
+    <%- include('partials/navbar') %>
+
+        <!-- Main Content -->
+        <div class="container">
+            <!-- Overview Section -->
+            <section class="overview">
+                <h2>Your Total Overview</h2>
+
+                <div class="cards">
+                    <div class="card" style="color: green;">
+                        <h3>Current Total Credit</h3>
+                        <p style="color: green;">₹<%= total_credit %>
+                        </p>
+                    </div>
+                    <div class="card" style="color: red;">
+                        <h3>Current Total Debit</h3>
+                        <p style="color: red;">₹<%= total_debit %>
+                        </p>
+                    </div>
+                    <div class="card" style="color: <%= total_balance >= 0 ? 'green' : 'red' %>;">
+                        <h3>Current Total Balance</h3>
+                        <p style="color: <%= total_balance >= 0 ? 'green' : 'red' %>;">₹<%= total_balance %>
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- Current Month Transactions -->
+            <section class="transactions">
+                <h2>Total Transactions</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date Time</th>
+                                <th>Type</th>
+                                <th>From/To</th>
+                                <th>Amount</th>
+                                <th>Note</th>
+                                <th>Proof</th>
+                                <th>Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% tot_trans.forEach(function(transaction) { %>
+                                <tr>
+                                    <!-- Format the date -->
+                                    <td>
+                                        <%= new Date(transaction.date_time).toLocaleString('en-US', { weekday: 'short' ,
+                                            year: 'numeric' , month: 'short' , day: 'numeric' , hour: '2-digit' ,
+                                            minute: '2-digit' , second: '2-digit' }) %>
+                                    </td>
+
+                                    <!-- Display the type with color -->
+                                    <td style="color: <%= transaction.type === 'credit' ? 'green' : 'red' %>;">
+                                        <%= transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1) %>
+                                    </td>
+
+                                    <!-- Display the 'From/To' field -->
+                                    <td>
+                                        <%= transaction.frmto %>
+                                    </td>
+
+                                    <!-- Display the amount with color -->
+                                    <td style="color: <%= transaction.type === 'credit' ? 'green' : 'red' %>;">
+                                        ₹<%= transaction.amount %>
+                                    </td>
+
+                                    <!-- Display the note -->
+                                    <td>
+                                        <%= transaction.note %>
+                                    </td>
+
+                                    <!-- Button to show proof (image) -->
+                                    <td>
+                                        <% if (transaction.photoId) { %>
+                                            <button class="btn" onclick="showProof('<%= transaction._id %>')">View
+                                                Proof</button>
+                                            <% } else { %>
+                                                <span>No proof</span>
+                                                <% } %>
+                                    </td>
+                                    <!-- Button to Delete Transaction -->
+                                    <td>
+                                        <button class="btn-red" onclick="deleTrans('<%= transaction._id %>')">Delete</button>
+                                    </td>
+                                </tr>
+                                <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </div>
+        <!-- Proof Image Modal -->
+        <div id="proof-modal" class="modal">
+            <div class="modal-content-img">
+                <h2>Transaction Proof</h2>
+                <span id="close-proof-modal-btn" class="close-btn">&times;</span><br>
+                <img id="proof-image" src="" style="max-width: -webkit-fill-available;" alt="Transaction Proof" />
+            </div>
+        </div>
+        <script>
+            const proofModal = document.getElementById('proof-modal');
+            const closeProofModalBtn = document.getElementById('close-proof-modal-btn');
+            const proofImage = document.getElementById('proof-image');
+            // Show proof image when the button is clicked
+            function showProof(photoId) {
+                const imageUrl = `/proof/${photoId}`;
+                console.log(imageUrl)
+                proofImage.src = imageUrl;
+                proofModal.style.display = 'block';
+            }
+
+            async function deleTrans(id){
+                try {
+                    const response = await fetch(`/del/${id}`,{
+                        method: 'POST',
+                    });
+
+                    const result = await response.json();
+                    if (response.ok) {
+                        showError("Deleted Successfully!", "green");
+                    } else {
+                        showError(result.message || "Something went wrong.");
+                    }
+                    
+                } catch (error) {
+                    console.log(error)
+                    if (!result.message){
+                        showError('An error occurred. Please try again later.');
+                        console.log("a")
+                    }
+                }
+            }
+
+
+            // Close proof modal when close button is clicked
+            closeProofModalBtn.addEventListener('click', () => {
+                proofModal.style.display = 'none';
+            });
+
+            // Close modal if clicked outside of modal content
+            window.addEventListener('click', (e) => {
+                if (e.target === proofModal) {
+                    proofModal.style.display = 'none';
+                    proofModal.classList.remove('show');
+                }
+                if (e.target === proofModal) {
+                    proofModal.style.display = 'none';
+                }
+            });
+        </script>
+</body>
+
+</html>

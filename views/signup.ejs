@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Expenso</title>
+    <link rel="icon" href="/favicon.jpg">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Include Navbar -->
+    <%- include('partials/navbar') %>
+
+        <!-- Sign Up Form -->
+        <div class="signup-container">
+            <div class="signup-box">
+                <h2>Create an Account</h2>
+                <form id="signup-form" action="/signup" method="POST">
+                    <div class="input-group-row">
+                        <div class="input-group">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="number">Phone Number</label>
+                            <input type="number" id="number" name="number" required>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="input-group-row">
+                        <div class="input-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="confirm-password">Confirm Password</label>
+                            <input type="password" id="confirm-password" name="confirm_password" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">Sign Up</button>
+                </form>
+                <p class="signin-text">Already have an account? <a href="/signin">Sign In</a></p>
+            </div>
+        </div>
+        <script>
+            const form = document.getElementById('signup-form');
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                const formData = new FormData(form);
+                const data = new URLSearchParams(formData);
+                
+                // Debugging: Log the form data
+                console.log('Form data being sent:', data.toString());
+
+                try {
+                    const response = await fetch('/signup', {
+                        method: 'POST',
+                        body: data
+                    });
+
+                    const result = await response.json();
+                    console.log(result);  // Log the response from the server
+                    
+                    if (response.ok) {
+                        window.location.href = '/'; // Redirect to signin page after successful sign-up
+                    } else {
+                        showError(result.message); // Show error if not successful
+                    }
+                } catch (error) {
+                    showError('An error occurred. Please try again later.');
+                }
+            });
+        </script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expenditure Management</title>
+    <link rel="icon" href="/favicon.jpg">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Include Navbar -->
+    <%- include('partials/navbar') %>
+
+        <!-- Main Content -->
+        <div class="container">
+            <!-- Overview Section -->
+            <section class="overview">
+                <h2>Your Monthly Overview</h2>
+
+                <div class="cards">
+                    <div class="card" style="color: green;">
+                        <h3>Current Month Credit</h3>
+                        <p style="color: green;">₹<%= cur_month_credit %>
+                        </p>
+                    </div>
+                    <div class="card" style="color: red;">
+                        <h3>Current Month Debit</h3>
+                        <p style="color: red;">₹<%= cur_month_debit %>
+                        </p>
+                    </div>
+                    <div class="card" style="color: <%= cur_month_balance >= 0 ? 'green' : 'red' %>;">
+                        <h3>Current Month Balance</h3>
+                        <p style="color: <%= cur_month_balance >= 0 ? 'green' : 'red' %>;">₹<%= cur_month_balance %>
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Actions -->
+            <section class="actions">
+                <button id="add-expense-btn" class="btn">Add Expense</button>
+                <button class="btn" onclick="window.open('/generate-pdf', '_blank')">View Report</button>
+            </section>
+
+            <!-- Current Month Transactions -->
+            <section class="transactions">
+                <h2>Current Month Transactions</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date Time</th>
+                                <th>Type</th>
+                                <th>From/To</th>
+                                <th>Amount</th>
+                                <th>Note</th>
+                                <th>Proof</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% cur_month_trans.forEach(function(transaction) { %>
+                            <tr>
+                                <td>
+                                    <%= new Date(transaction.date_time).toLocaleString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) %>
+                                </td>
+                                <td style="color: <%= transaction.type === 'credit' ? 'green' : 'red' %>;">
+                                    <%= transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1) %>
+                                </td>
+                                <td>
+                                    <%= transaction.frmto %>
+                                </td>
+                                <td style="color: <%= transaction.type === 'credit' ? 'green' : 'red' %>;">
+                                    ₹<%= transaction.amount %>
+                                </td>
+                                <td>
+                                    <%= transaction.note %>
+                                </td>
+                                <td>
+                                    <% if (transaction.photoId) { %>
+                                        <button class="btn" onclick="showProof('<%= transaction._id %>')">View Proof</button>
+                                    <% } else { %>
+                                        <span>No proof</span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            
+
+        </div>
+
+        <!-- Modal for Adding Expense -->
+        <div id="expense-modal" class="modal">
+            <div class="modal-content">
+                <h2>Add New Transaction</h2>
+                <span id="close-modal-btn" class="close-btn">&times;</span>
+                <form id="expense-form" enctype="multipart/form-data">
+
+                    <!-- Transaction Type -->
+                    <div class="input-group">
+                        <label>Transaction Type</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="credit" style="margin: 0px;" name="type" value="credit" checked>
+                                <label for="credit">Credit</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="debit" style="margin: 0px;" name="type" value="debit">
+                                <label for="debit">Debit</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic From/To Field -->
+                    <div class="input-group">
+                        <label id="frmto-label" for="frmto">From</label>
+                        <input type="text" id="frmto" name="frmto" placeholder="Name of person" required>
+                    </div>
+
+                    <!-- Amount -->
+                    <div class="input-group">
+                        <label for="amount">Amount</label>
+                        <input type="number" id="amount" name="amount" required>
+                    </div>
+
+                    <!-- Note -->
+                    <div class="input-group">
+                        <label for="note">Note/Purpose</label>
+                        <textarea id="note" name="note" placeholder="Reason for transaction" required></textarea>
+                    </div>
+
+                    <!-- Transaction Proof (Image) -->
+                    <div class="input-group">
+                        <label for="proof">Upload Proof (Image) <span style="color: red;">( jpg / jpeg / png
+                                )</span></label>
+                        <input type="file" id="proof" name="proof" accept="image/jpeg, image/png, image/jpg">
+                    </div>
+
+                    <button type="submit" class="btn">Add Transaction</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Proof Image Modal -->
+        <div id="proof-modal" class="modal">
+            <div class="modal-content-img">
+                <h2>Transaction Proof</h2>
+                <span id="close-proof-modal-btn" class="close-btn">&times;</span><br>
+                <img id="proof-image" src="" style="max-width: -webkit-fill-available;" alt="Transaction Proof" />
+            </div>
+        </div>
+
+        <script>
+            // Get elements
+            const addExpenseBtn = document.getElementById('add-expense-btn');
+            const expenseModal = document.getElementById('expense-modal');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            const expenseForm = document.getElementById('expense-form');
+            const frmtoLabel = document.getElementById('frmto-label');
+            const creditRadio = document.getElementById('credit');
+            const debitRadio = document.getElementById('debit');
+            const proofModal = document.getElementById('proof-modal');
+            const closeProofModalBtn = document.getElementById('close-proof-modal-btn');
+            const proofImage = document.getElementById('proof-image');
+
+            // Show modal when "Add Expense" button is clicked
+            addExpenseBtn.addEventListener('click', () => {
+                expenseModal.style.display = 'block';
+                expenseModal.classList.add('show');
+            });
+
+            // Close modal when close button is clicked
+            closeModalBtn.addEventListener('click', () => {
+                expenseModal.style.display = 'none';
+                expenseModal.classList.remove('show');
+            });
+
+            // Handle form submission
+            expenseForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+
+                const proofInput = document.getElementById('proof');
+                const proofFile = proofInput.files[0]; // Get the first file from the input
+                const formData = new FormData(expenseForm); // Create a new FormData object from the form
+                
+                // If a file is selected, convert it to Base64 and append to FormData
+                if (proofFile) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const base64String = reader.result.split(',')[1]; // Get the Base64 string (excluding the "data:image/png;base64," part)
+
+                        // Append the Base64 string to the form data
+                        formData.delete('proof')
+                        formData.append("proof", base64String); // Add the Base64 image string to the form data
+
+                        
+                        const data = new URLSearchParams(formData);
+                        // Now send the form data to the server (this will include the image as Base64 string)
+                        sendFormData(data);
+                    };
+                    reader.readAsDataURL(proofFile); // This will trigger the reader.onloadend event when done
+                } else {
+                    // If no image is selected, send the form data without the proofBase64
+                    sendFormData(formData);
+                }
+            });
+            async function sendFormData(data) {
+                try {
+                    // Debugging: Log the form data
+                    console.log('Form data being sent:', data.toString());
+
+                    const response = await fetch('/add-transaction', {
+                        method: 'POST',
+                        body: data
+                    });
+
+                    const result = await response.json();
+                    if (response.ok) {
+                        showError("Transaction added successfully!", "green");
+                        expenseModal.style.display = 'none';
+                        expenseModal.classList.remove('show');
+                        expenseForm.reset(); // Reset form after submission
+                    } else {
+                        showError(result.message || "Something went wrong.");
+                    }
+                } catch (error) {
+                    showError('An error occurred. Please try again later.');
+                }
+            }
+
+            // Update the From/To label based on selected transaction type
+            creditRadio.addEventListener('change', () => {
+                frmtoLabel.textContent = 'From';
+            });
+            debitRadio.addEventListener('change', () => {
+                frmtoLabel.textContent = 'To';
+            });
+
+            // Show proof image when the button is clicked
+            function showProof(photoId) {
+                const imageUrl = `/proof/${photoId}`;
+                console.log(imageUrl)
+                proofImage.src = imageUrl;
+                proofModal.style.display = 'block';
+            }
+
+            // Close proof modal when close button is clicked
+            closeProofModalBtn.addEventListener('click', () => {
+                proofModal.style.display = 'none';
+            });
+
+            // Close modal if clicked outside of modal content
+            window.addEventListener('click', (e) => {
+                if (e.target === expenseModal) {
+                    expenseModal.style.display = 'none';
+                    expenseModal.classList.remove('show');
+                }
+                if (e.target === proofModal) {
+                    proofModal.style.display = 'none';
+                }
+            });
+        </script>
+
+</body>
+
+</html>

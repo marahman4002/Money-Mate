@@ -1,0 +1,38 @@
+<nav class="navbar">
+    <div class="logo">Money Mate</div>
+    <ul class="nav-links">
+        <% if (locals.isAuthenticated) { %>
+            <li><a href="/">Home</a></li>
+            <!-- <li><a href="/group">Groups</a></li> -->
+            <li><a href="/history">History</a></li>
+            <li><a href="/logout">Logout</a></li>
+        <% } else { %>
+            <li><a href="/signin">Sign In</a></li>
+            <li><a href="/signup">Sign Up</a></li>
+        <% } %>
+    </ul>
+</nav>
+
+<!-- Error Notification Container -->
+
+<div id="error-container"></div>
+
+<script>
+    function showError(message,color="red") {
+        const errorContainer = document.getElementById('error-container');
+        const errorBox = document.createElement('div');
+        errorBox.classList.add(`error-box-${color}`);
+        errorBox.innerHTML = `
+            <span class="error-message">${message}</span>
+            <button class="close-btn-pop">&times;</button>
+        `;
+        errorContainer.appendChild(errorBox);
+
+        // Close error box after 10 seconds
+        setTimeout(() => errorBox.remove(), 5000);
+
+        // Add close button functionality
+        const closeButton = errorBox.querySelector('.close-btn-pop');
+        closeButton.addEventListener('click', () => errorBox.remove());
+    }
+</script>
