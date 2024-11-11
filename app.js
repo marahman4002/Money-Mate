@@ -10,7 +10,7 @@ const User = require("./models/User"); // Assumes User model is in models/User.j
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const conn = process.env.DB_URI || "mongodb://localhost:27017/expenso"
+const conn = process.env.DB_URI || "mongodb://localhost:27017/Money-Mate"
 const SECRET_KEY = process.env.SECRET_KEY || "your_jwt_secret_key"; // Replace with a secure key in production
 
 // Connect to MongoDB
